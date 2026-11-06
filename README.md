@@ -10,6 +10,7 @@
 | NestJS / Express            | NestJS `12.3.3`       | จัดโครงสร้าง Module, Controller และ Service โดยใช้ Express รับ HTTP |
 | TypeScript                  | `6.0.3`               | เขียนโค้ดแบบมีชนิดข้อมูล                                            |
 | PostgreSQL / Docker Compose | อิมเมจ `postgres:17`  | รันฐานข้อมูลใน container และเก็บข้อมูลใน volume                     |
+| `@nestjs/config`            | `12.1.0`              | โหลด `.env` และจัดกลุ่ม config สำหรับ NestJS                        |
 | `pg` / `@types/pg`          | `8.23.1`              | เชื่อม PostgreSQL ผ่าน connection pool และเขียน SQL โดยตรง          |
 | Nest CLI / Schematics       | สาย `12.x`            | รันแอป, build และสร้างโครงไฟล์ด้วย `nest generate`                  |
 | Vitest / Supertest          | `4.1.12` / `7.3.1`    | รัน unit test และทดสอบ HTTP แบบ E2E                                 |
@@ -31,17 +32,46 @@ mise exec -- npm run start:dev
 
 API เปิดที่ `http://localhost:3000` โดยเปลี่ยนพอร์ตได้ผ่านตัวแปร `PORT` ส่วน PostgreSQL รับการเชื่อมต่อที่ `127.0.0.1:5432`
 
-## ตั้งค่าฐานข้อมูล
+## เลือก environment และตั้งค่าฐานข้อมูล
 
-`src/config/database.config.ts` อ่าน environment variables แล้วส่งค่าให้ `Pool` ใน `TodosService` ค่าเริ่มต้นด้านล่างตรงกับ PostgreSQL ใน Compose สำหรับใช้ในเครื่อง
+ตั้ง `APP_ENV` ใน shell ก่อนรันแอป แล้ว `ConfigModule` จะเลือกไฟล์จาก root ของโปรเจกต์ตามตารางนี้
 
-| ตัวแปร       | ค่าเริ่มต้น  |
-| ------------ | ------------ |
-| `PGHOST`     | `127.0.0.1`  |
-| `PGPORT`     | `5432`       |
-| `PGUSER`     | `todo`       |
-| `PGPASSWORD` | `todo_local` |
-| `PGDATABASE` | `todos`      |
+| `APP_ENV`             | ไฟล์ที่อ่าน                              |
+| --------------------- | ---------------------------------------- |
+| `local` (ค่าเริ่มต้น) | `.env.local` แล้วเติมค่าที่ขาดจาก `.env` |
+| `sit`                 | `.env.sit`                               |
+| `uat`                 | `.env.uat`                               |
+| `prod`                | `.env.prod`                              |
+
+ค่าที่ตั้งไว้ใน shell หรือส่งเข้ามาจากระบบ deploy มีลำดับสูงกว่าไฟล์ env Git ignore ไฟล์ env ยกเว้น `.env.sit` และ `.env.uat` ซึ่งเก็บค่าจำลองไว้สำหรับเรียน
+
+ไฟล์ `.env.sit` ในโปรเจกต์ใช้ค่าจำลอง ตัวอย่างค่าที่ใช้ตั้งค่า SIT มีดังนี้
+
+```dotenv
+PGHOST=your-sit-db-host
+PGPORT=5432
+PGUSER=your-sit-db-user
+PGPASSWORD=your-sit-db-password
+PGDATABASE=todos
+```
+
+```bash
+APP_ENV=sit mise exec -- npm run start:dev
+APP_ENV=uat mise exec -- npm run start:dev
+APP_ENV=prod mise exec -- npm run start:prod # รัน build ก่อน
+```
+
+สำหรับ `sit`, `uat` และ `prod` แอปต้องได้รับ `PGHOST`, `PGUSER`, `PGPASSWORD` และ `PGDATABASE` ผ่านไฟล์ของสภาพแวดล้อมนั้นหรือ environment variables หากไม่ตั้ง `PGPORT` จะใช้ `5432` และถ้าตั้งผิดแอปจะแจ้งตอนเริ่มรัน
+
+สำหรับ `local` ค่าเริ่มต้นตรงกับ PostgreSQL ใน Compose จึงรันได้ทันทีโดยไม่ต้องสร้างไฟล์ env
+
+| ตัวแปร       | ค่าเริ่มต้นสำหรับ local |
+| ------------ | ----------------------- |
+| `PGHOST`     | `127.0.0.1`             |
+| `PGPORT`     | `5432`                  |
+| `PGUSER`     | `todo`                  |
+| `PGPASSWORD` | `todo_local`            |
+| `PGDATABASE` | `todos`                 |
 
 `postgres/init.sql` สร้างตาราง `todos` ครั้งแรกที่ PostgreSQL เตรียม volume ใหม่ ข้อมูลอยู่ใน volume `postgres-data` จึงอยู่ต่อหลังรีสตาร์ตแอปหรือ container หยุดฐานข้อมูลโดยเก็บข้อมูลไว้ได้ด้วย `docker compose stop postgres`
 
@@ -70,7 +100,8 @@ curl http://localhost:3000/todos
 - `src/main.ts` สตาร์ต NestJS ส่วน `src/app.module.ts` ลงทะเบียน `TodosModule`
 - `src/todos/todos.controller.ts` รับ HTTP request และตรวจข้อมูลก่อนส่งให้ Service
 - `src/todos/todos.service.ts` ใช้ SQL แบบมีพารามิเตอร์เพื่ออ่านและเขียน PostgreSQL
-- `src/config/database.config.ts` รวมค่าเชื่อมต่อฐานข้อมูล
+- `src/config/app-environment.ts` เลือกไฟล์ตาม `APP_ENV`
+- `src/config/database.config.ts` จัดกลุ่มค่าเชื่อมต่อฐานข้อมูลและส่งให้ `TodosService` ผ่าน dependency injection
 - `compose.yaml` กำหนด PostgreSQL container, พอร์ต และ volume
 - `postgres/init.sql` กำหนดโครงสร้างตาราง
 

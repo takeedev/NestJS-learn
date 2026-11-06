@@ -1,11 +1,13 @@
 import {
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
   type OnModuleDestroy,
 } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { Pool } from 'pg';
-import { getDatabaseConfig } from '../config/database.config.js';
+import { databaseConfig } from '../config/database.config.js';
 
 export interface Todo {
   id: number;
@@ -16,9 +18,12 @@ export interface Todo {
 @Injectable()
 export class TodosService implements OnModuleDestroy {
   private readonly logger = new Logger(TodosService.name);
-  private readonly pool = new Pool(getDatabaseConfig());
+  private readonly pool: Pool;
 
-  constructor() {
+  constructor(
+    @Inject(databaseConfig.KEY) config: ConfigType<typeof databaseConfig>,
+  ) {
+    this.pool = new Pool(config);
     this.pool.on('error', (error) => {
       this.logger.error('Idle PostgreSQL connection failed', error.stack);
     });
