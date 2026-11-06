@@ -11,8 +11,10 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { TodosService } from './todos.service.js';
 
+@ApiTags('Todos')
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
@@ -28,11 +30,30 @@ export class TodosController {
   }
 
   @Post()
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['title'],
+      properties: {
+        title: { type: 'string', example: 'ฝึก NestJS' },
+      },
+    },
+  })
   create(@Body('title') title: unknown) {
     return this.todosService.create(this.validateTitle(title));
   }
 
   @Put(':id')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['title', 'completed'],
+      properties: {
+        title: { type: 'string', example: 'ฝึก NestJS' },
+        completed: { type: 'boolean', example: true },
+      },
+    },
+  })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body('title') title: unknown,

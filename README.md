@@ -11,6 +11,7 @@
 | TypeScript                  | `6.0.3`               | เขียนโค้ดแบบมีชนิดข้อมูล                                            |
 | PostgreSQL / Docker Compose | อิมเมจ `postgres:17`  | รันฐานข้อมูลใน container และเก็บข้อมูลใน volume                     |
 | `@nestjs/config`            | `12.1.0`              | โหลด `.env` และจัดกลุ่ม config สำหรับ NestJS                        |
+| `@nestjs/swagger`           | `12.1.0`              | สร้าง OpenAPI และเปิด Swagger UI ให้ลองเรียก API                    |
 | `pg` / `@types/pg`          | `8.23.1`              | เชื่อม PostgreSQL ผ่าน connection pool และเขียน SQL โดยตรง          |
 | Nest CLI / Schematics       | สาย `12.x`            | รันแอป, build และสร้างโครงไฟล์ด้วย `nest generate`                  |
 | Vitest / Supertest          | `4.1.12` / `7.3.1`    | รัน unit test และทดสอบ HTTP แบบ E2E                                 |
@@ -48,11 +49,13 @@ API เปิดที่ `http://localhost:3000` โดยเปลี่ยน
 ไฟล์ `.env.sit` ในโปรเจกต์ใช้ค่าจำลอง ตัวอย่างค่าที่ใช้ตั้งค่า SIT มีดังนี้
 
 ```dotenv
+PORT=3001
 PGHOST=your-sit-db-host
 PGPORT=5432
 PGUSER=your-sit-db-user
 PGPASSWORD=your-sit-db-password
 PGDATABASE=todos
+SWAGGER_ENABLED=false
 ```
 
 ```bash
@@ -60,6 +63,8 @@ APP_ENV=sit mise exec -- npm run start:dev
 APP_ENV=uat mise exec -- npm run start:dev
 APP_ENV=prod mise exec -- npm run start:prod # รัน build ก่อน
 ```
+
+ไฟล์ตัวอย่างกำหนดพอร์ต HTTP ของ SIT เป็น `3001` และ UAT เป็น `3002` ผ่าน `PORT` ส่วน `PGPORT` เป็นพอร์ตของ PostgreSQL
 
 สำหรับ `sit`, `uat` และ `prod` แอปต้องได้รับ `PGHOST`, `PGUSER`, `PGPASSWORD` และ `PGDATABASE` ผ่านไฟล์ของสภาพแวดล้อมนั้นหรือ environment variables หากไม่ตั้ง `PGPORT` จะใช้ `5432` และถ้าตั้งผิดแอปจะแจ้งตอนเริ่มรัน
 
@@ -76,6 +81,14 @@ APP_ENV=prod mise exec -- npm run start:prod # รัน build ก่อน
 `postgres/init.sql` สร้างตาราง `todos` ครั้งแรกที่ PostgreSQL เตรียม volume ใหม่ ข้อมูลอยู่ใน volume `postgres-data` จึงอยู่ต่อหลังรีสตาร์ตแอปหรือ container หยุดฐานข้อมูลโดยเก็บข้อมูลไว้ได้ด้วย `docker compose stop postgres`
 
 ## ลองใช้ Todo API
+
+ตั้ง `SWAGGER_ENABLED=true` ในไฟล์ env ของ environment ที่ใช้หรือใน shell เพื่อเปิด Swagger และใช้ `false` เพื่อปิด ถ้าไม่ได้ตั้งค่า แอปจะเปิด Swagger เฉพาะ `local` ตัวอย่าง `.env.sit` และ `.env.uat` ตั้งไว้เป็น `false`
+
+```bash
+APP_ENV=sit SWAGGER_ENABLED=true mise exec -- npm run start:dev
+```
+
+เมื่อเปิดแล้ว เข้า Swagger UI ที่ [localhost:3001/docs](http://localhost:3001/docs) สำหรับ SIT หรือ [localhost:3000/docs](http://localhost:3000/docs) สำหรับ local แล้วเลือก **Todos** → **Try it out** → **Execute** เพื่อส่ง request จริง ดู OpenAPI JSON ได้ที่ `/docs-json` การลองคำสั่ง Todo ต้องใช้ PostgreSQL ที่แอปเข้าถึงได้
 
 ```bash
 curl http://localhost:3000/todos \
