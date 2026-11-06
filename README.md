@@ -1,6 +1,6 @@
 # NestJS Learn
 
-โปรเจกต์ฝึกเขียน Backend API ด้วย NestJS มีตัวอย่าง Todo CRUD ที่เก็บข้อมูลใน PostgreSQL โดยรันฐานข้อมูลใน Docker และรัน NestJS บนเครื่อง
+โปรเจกต์ฝึกเขียน Backend API ด้วย NestJS มีตัวอย่าง Todo CRUD และ Notes API ที่เก็บข้อมูลใน PostgreSQL โดยรันฐานข้อมูลใน Docker และรัน NestJS บนเครื่อง
 
 ## เวอร์ชันและเครื่องมือ
 
@@ -78,7 +78,7 @@ APP_ENV=prod mise exec -- npm run start:prod # รัน build ก่อน
 | `PGPASSWORD` | `todo_local`            |
 | `PGDATABASE` | `todos`                 |
 
-`postgres/init.sql` สร้างตาราง `todos` ครั้งแรกที่ PostgreSQL เตรียม volume ใหม่ ข้อมูลอยู่ใน volume `postgres-data` จึงอยู่ต่อหลังรีสตาร์ตแอปหรือ container หยุดฐานข้อมูลโดยเก็บข้อมูลไว้ได้ด้วย `docker compose stop postgres`
+`postgres/init.sql` สร้างตาราง `todos` และ `notes` ครั้งแรกที่ PostgreSQL เตรียม volume ใหม่ ข้อมูลอยู่ใน volume `postgres-data` จึงอยู่ต่อหลังรีสตาร์ตแอปหรือ container หยุดฐานข้อมูลโดยเก็บข้อมูลไว้ได้ด้วย `docker compose stop postgres`
 
 ## ลองใช้ Todo API
 
@@ -98,23 +98,37 @@ curl http://localhost:3000/todos \
 curl http://localhost:3000/todos
 ```
 
-| Method   | Path         | การทำงาน                                              |
-| -------- | ------------ | ----------------------------------------------------- |
-| `GET`    | `/`          | ตอบ `Hello World!`                                    |
-| `GET`    | `/test`      | ตอบ `test`                                            |
-| `POST`   | `/todos`     | สร้างรายการจาก `title` โดยเริ่มที่ `completed: false` |
-| `GET`    | `/todos`     | ดูรายการทั้งหมด                                       |
-| `GET`    | `/todos/:id` | ดูรายการตาม ID                                        |
-| `PUT`    | `/todos/:id` | แก้รายการ โดยส่งทั้ง `title` และ `completed`          |
-| `DELETE` | `/todos/:id` | ลบรายการและตอบ `204 No Content`                       |
+| Method   | Path                   | การทำงาน                                                           |
+| -------- | ---------------------- | ------------------------------------------------------------------ |
+| `GET`    | `/`                    | ตอบ `Hello World!`                                                 |
+| `GET`    | `/test`                | ตอบ `test`                                                         |
+| `POST`   | `/todos`               | สร้างรายการจาก `title` โดยเริ่มที่ `completed: false`              |
+| `GET`    | `/todos`               | ดูรายการทั้งหมด                                                    |
+| `GET`    | `/todos/:id`           | ดูรายการตาม ID                                                     |
+| `PUT`    | `/todos/:id`           | แก้รายการ โดยส่งทั้ง `title` และ `completed`                       |
+| `PATCH`  | `/todos/:id/completed` | เปลี่ยนสถานะโดยส่ง `{"completed":true}` หรือ `{"completed":false}` |
+| `DELETE` | `/todos/:id`           | ลบรายการและตอบ `204 No Content`                                    |
+
+## ลองใช้ Notes API
+
+เปิด Swagger UI แล้วเลือกกลุ่ม **Notes** ใช้ `POST /notes` พร้อม body
+`{"content":"ฝึกทำ API ด้วย NestJS"}` เพื่อสร้างโน้ต แล้วใช้ `GET /notes` เพื่อดูรายการ
+
+ถ้ามี Docker volume จากก่อนเพิ่ม Notes ให้รันคำสั่งนี้เพื่อสร้างตารางเพิ่มในฐานข้อมูลเดิม
+
+```bash
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U todo -d todos < postgres/init.sql
+```
 
 ## อ่านโค้ดจากตรงไหน
 
-- `src/main.ts` สตาร์ต NestJS ส่วน `src/app.module.ts` ลงทะเบียน `TodosModule`
+- `src/main.ts` สตาร์ต NestJS ส่วน `src/app.module.ts` ลงทะเบียน `TodosModule` และ `NotesModule`
 - `src/todos/todos.controller.ts` รับ HTTP request และตรวจข้อมูลก่อนส่งให้ Service
 - `src/todos/todos.service.ts` ใช้ SQL แบบมีพารามิเตอร์เพื่ออ่านและเขียน PostgreSQL
 - `src/config/app-environment.ts` เลือกไฟล์ตาม `APP_ENV`
-- `src/config/database.config.ts` จัดกลุ่มค่าเชื่อมต่อฐานข้อมูลและส่งให้ `TodosService` ผ่าน dependency injection
+- `src/config/database.config.ts` จัดกลุ่มค่าเชื่อมต่อฐานข้อมูลและส่งให้ `DatabaseService` ผ่าน dependency injection
+- `src/database/database.module.ts` ดูแล PostgreSQL Pool ที่ Todo และ Notes ใช้ร่วมกัน
+- `src/notes/` แยก Controller และ Service สำหรับสร้างและอ่านโน้ต
 - `compose.yaml` กำหนด PostgreSQL container, พอร์ต และ volume
 - `postgres/init.sql` กำหนดโครงสร้างตาราง
 

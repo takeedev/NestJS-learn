@@ -3,3 +3,8 @@ CREATE TABLE IF NOT EXISTS todos (
   title text NOT NULL,
   completed boolean NOT NULL DEFAULT false
 );
+
+CREATE TABLE IF NOT EXISTS notes (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  content text NOT NULL
+);

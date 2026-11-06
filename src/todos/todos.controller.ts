@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
 } from '@nestjs/common';
@@ -59,17 +60,41 @@ export class TodosController {
     @Body('title') title: unknown,
     @Body('completed') completed: unknown,
   ) {
-    if (typeof completed !== 'boolean') {
-      throw new BadRequestException('completed must be a boolean');
-    }
+    const status = this.validateCompleted(completed);
+    return this.todosService.update(id, this.validateTitle(title), status);
+  }
 
-    return this.todosService.update(id, this.validateTitle(title), completed);
+  @Patch(':id/completed')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['completed'],
+      properties: {
+        completed: { type: 'boolean', example: true },
+      },
+    },
+  })
+  updateCompleted(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('completed') completed: unknown,
+  ) {
+    return this.todosService.updateCompleted(
+      id,
+      this.validateCompleted(completed),
+    );
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.todosService.remove(id);
+  }
+
+  private validateCompleted(completed: unknown): boolean {
+    if (typeof completed !== 'boolean') {
+      throw new BadRequestException('completed must be a boolean');
+    }
+    return completed;
   }
 
   private validateTitle(title: unknown): string {
