@@ -48,12 +48,15 @@ export class TodosController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
-    this.todosService.remove(id);
+    return this.todosService.remove(id);
   }
 
   private validateTitle(title: unknown): string {
     if (typeof title !== 'string' || !title.trim()) {
       throw new BadRequestException('title must be a non-empty string');
+    }
+    if (title.includes('\0')) {
+      throw new BadRequestException('title cannot contain a null character');
     }
     return title.trim();
   }
