@@ -127,7 +127,7 @@ docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U todo -d todos < postg
 - `src/todos/todos.service.ts` ใช้ SQL แบบมีพารามิเตอร์เพื่ออ่านและเขียน PostgreSQL
 - `src/config/app-environment.ts` เลือกไฟล์ตาม `APP_ENV`
 - `src/config/database.config.ts` จัดกลุ่มค่าเชื่อมต่อฐานข้อมูลและส่งให้ `DatabaseService` ผ่าน dependency injection
-- `src/database/database.module.ts` ดูแล PostgreSQL Pool ที่ Todo และ Notes ใช้ร่วมกัน
+- `src/database/database.module.ts` ใช้ `@Global()` และ import ใน `AppModule` ครั้งเดียว เพื่อให้ Todo และ Notes inject `DatabaseService` และใช้ PostgreSQL Pool ร่วมกัน
 - `src/notes/` แยก Controller และ Service สำหรับสร้างและอ่านโน้ต
 - `compose.yaml` กำหนด PostgreSQL container, พอร์ต และ volume
 - `postgres/init.sql` กำหนดโครงสร้างตาราง

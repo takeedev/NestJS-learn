@@ -1,4 +1,5 @@
 import {
+  Global,
   Inject,
   Injectable,
   Logger,
@@ -28,6 +29,7 @@ export class DatabaseService implements OnModuleDestroy {
   }
 }
 
+@Global()
 @Module({
   imports: [ConfigModule.forFeature(databaseConfig)],
   providers: [DatabaseService],
