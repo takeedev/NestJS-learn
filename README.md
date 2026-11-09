@@ -6,3 +6,16 @@
 
 กรณีอยากเขียนเป็น JavaScript สามารถเขียนได้ แต่ต้องใช้ [Babel](https://babeljs.io) เข้ามาช่วยในการ compile เนื่องจากโครงสร้างหลักของ NestJS ส่วนใหญ่ใช้ TypeScript
 
+# [Controller](https://docs.nestjs.com/controllers)
+มีหน้าที่รับและจัดการคำขอ (request) จาก client แล้วส่งผลตอบกลับ (response) โดยระบบ Routing จะจับคู่ HTTP method และ path ของคำขอกับเมธอดใน Controller ที่รับผิดชอบ Controller หนึ่งตัวมีได้หลาย route และแต่ละ route ทำงานต่างกันได้
+
+```mermaid
+flowchart LR
+    Client["Client Side"] -. HTTP request .-> Router(( ))
+    Router --> Top["Controller"]
+    Router --> Selected["Controller"]
+    Router --> Bottom["Controller"]
+
+    classDef selected fill:#183042,stroke:#183042,color:#fff
+    class Selected selected
+```
