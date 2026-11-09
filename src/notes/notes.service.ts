@@ -1,27 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.module.js';
-
-export interface Note {
-  id: number;
-  content: string;
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Note } from './note.entity.js';
 
 @Injectable()
 export class NotesService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    @InjectRepository(Note)
+    private readonly notesRepository: Repository<Note>,
+  ) {}
 
-  async findAll(): Promise<Note[]> {
-    const { rows } = await this.database.pool.query<Note>(
-      'SELECT id, content FROM notes ORDER BY id',
-    );
-    return rows;
+  findAll(): Promise<Note[]> {
+    return this.notesRepository.find({ order: { id: 'ASC' } });
   }
 
-  async create(content: string): Promise<Note> {
-    const { rows } = await this.database.pool.query<Note>(
-      'INSERT INTO notes (content) VALUES ($1) RETURNING id, content',
-      [content],
-    );
-    return rows[0];
+  create(content: string): Promise<Note> {
+    const note = this.notesRepository.create({ content });
+    return this.notesRepository.save(note);
   }
 }

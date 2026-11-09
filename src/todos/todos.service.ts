@@ -1,67 +1,55 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.module.js';
-
-export interface Todo {
-  id: number;
-  title: string;
-  completed: boolean;
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Todo } from './todo.entity.js';
 
 @Injectable()
 export class TodosService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    @InjectRepository(Todo)
+    private readonly todosRepository: Repository<Todo>,
+  ) {}
 
-  async findAll(): Promise<Todo[]> {
-    const { rows } = await this.database.pool.query<Todo>(
-      'SELECT id, title, completed FROM todos ORDER BY id',
-    );
-    return rows;
+  findAll(): Promise<Todo[]> {
+    return this.todosRepository.find({ order: { id: 'ASC' } });
   }
 
   async findOne(id: number): Promise<Todo> {
     this.validateId(id);
-    const { rows } = await this.database.pool.query<Todo>(
-      'SELECT id, title, completed FROM todos WHERE id = $1',
-      [id],
-    );
-    return this.requireTodo(rows[0], id);
+    return this.requireTodo(await this.todosRepository.findOneBy({ id }), id);
   }
 
-  async create(title: string): Promise<Todo> {
-    const { rows } = await this.database.pool.query<Todo>(
-      'INSERT INTO todos (title) VALUES ($1) RETURNING id, title, completed',
-      [title],
-    );
-    return rows[0];
+  create(title: string): Promise<Todo> {
+    const todo = this.todosRepository.create({ title, completed: false });
+    return this.todosRepository.save(todo);
   }
 
-  async update(id: number, title: string, completed: boolean): Promise<Todo> {
-    this.validateId(id);
-    const { rows } = await this.database.pool.query<Todo>(
-      'UPDATE todos SET title = $1, completed = $2 WHERE id = $3 RETURNING id, title, completed',
-      [title, completed, id],
-    );
-    return this.requireTodo(rows[0], id);
+  update(id: number, title: string, completed: boolean): Promise<Todo> {
+    return this.updateFields(id, { title, completed });
   }
 
-  async updateCompleted(id: number, completed: boolean): Promise<Todo> {
-    this.validateId(id);
-    const { rows } = await this.database.pool.query<Todo>(
-      'UPDATE todos SET completed = $1 WHERE id = $2 RETURNING id, title, completed',
-      [completed, id],
-    );
-    return this.requireTodo(rows[0], id);
+  updateCompleted(id: number, completed: boolean): Promise<Todo> {
+    return this.updateFields(id, { completed });
   }
 
   async remove(id: number): Promise<void> {
     this.validateId(id);
-    const { rowCount } = await this.database.pool.query(
-      'DELETE FROM todos WHERE id = $1',
-      [id],
-    );
-    if (rowCount === 0) {
+    const { affected } = await this.todosRepository.delete(id);
+    if (affected === 0) {
       throw new NotFoundException(`Todo ${id} not found`);
     }
+  }
+
+  private async updateFields(
+    id: number,
+    fields: Partial<Pick<Todo, 'title' | 'completed'>>,
+  ): Promise<Todo> {
+    this.validateId(id);
+    const result = await this.todosRepository.update(id, fields, {
+      returning: ['id', 'title', 'completed'],
+    });
+    const [todo] = result.raw as Todo[];
+    return this.requireTodo(todo, id);
   }
 
   private validateId(id: number): void {
@@ -71,7 +59,7 @@ export class TodosService {
     }
   }
 
-  private requireTodo(todo: Todo | undefined, id: number): Todo {
+  private requireTodo(todo: Todo | null | undefined, id: number): Todo {
     if (!todo) {
       throw new NotFoundException(`Todo ${id} not found`);
     }

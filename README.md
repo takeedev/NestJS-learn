@@ -12,7 +12,8 @@
 | PostgreSQL / Docker Compose | อิมเมจ `postgres:17`  | รันฐานข้อมูลใน container และเก็บข้อมูลใน volume                     |
 | `@nestjs/config`            | `12.1.0`              | โหลด `.env` และจัดกลุ่ม config สำหรับ NestJS                        |
 | `@nestjs/swagger`           | `12.1.0`              | สร้าง OpenAPI และเปิด Swagger UI ให้ลองเรียก API                    |
-| `pg` / `@types/pg`          | `8.23.1`              | เชื่อม PostgreSQL ผ่าน connection pool และเขียน SQL โดยตรง          |
+| TypeORM / `@nestjs/typeorm` | `0.3.31` / `12.0.3`   | แมป Entity กับตารางและ inject Repository ให้ Service                |
+| `pg`                        | `8.23.1`              | Driver PostgreSQL ที่ TypeORM ใช้                                   |
 | Nest CLI / Schematics       | สาย `12.x`            | รันแอป, build และสร้างโครงไฟล์ด้วย `nest generate`                  |
 | Vitest / Supertest          | `4.1.12` / `7.3.1`    | รัน unit test และทดสอบ HTTP แบบ E2E                                 |
 | Oxlint / `oxlint-tsgolint`  | `1.91.0` / `7.0.2006` | ตรวจโค้ดและกฎที่ใช้ข้อมูลชนิดของ TypeScript                         |
@@ -80,6 +81,8 @@ APP_ENV=prod mise exec -- npm run start:prod # รัน build ก่อน
 
 `postgres/init.sql` สร้างตาราง `todos` และ `notes` ครั้งแรกที่ PostgreSQL เตรียม volume ใหม่ ข้อมูลอยู่ใน volume `postgres-data` จึงอยู่ต่อหลังรีสตาร์ตแอปหรือ container หยุดฐานข้อมูลโดยเก็บข้อมูลไว้ได้ด้วย `docker compose stop postgres`
 
+TypeORM ใช้ตารางเดิมผ่าน `@Entity()` และปิด `synchronize` ไว้ การสร้างตารางจึงมาจาก SQL ด้านบน แอปต้องเชื่อม PostgreSQL ได้ตอนเริ่มรัน
+
 ## ลองใช้ Todo API
 
 ตั้ง `SWAGGER_ENABLED=true` ในไฟล์ env ของ environment ที่ใช้หรือใน shell เพื่อเปิด Swagger และใช้ `false` เพื่อปิด ถ้าไม่ได้ตั้งค่า แอปจะเปิด Swagger เฉพาะ `local` ตัวอย่าง `.env.sit` และ `.env.uat` ตั้งไว้เป็น `false`
@@ -124,10 +127,9 @@ docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U todo -d todos < postg
 
 - `src/main.ts` สตาร์ต NestJS ส่วน `src/app.module.ts` ลงทะเบียน `TodosModule` และ `NotesModule`
 - `src/todos/todos.controller.ts` รับ HTTP request และตรวจข้อมูลก่อนส่งให้ Service
-- `src/todos/todos.service.ts` ใช้ SQL แบบมีพารามิเตอร์เพื่ออ่านและเขียน PostgreSQL
-- `src/config/app.config.ts` เลือกไฟล์ตาม `APP_ENV` และจัดกลุ่มค่า PostgreSQL ให้ `DatabaseService`
-- `src/database/database.module.ts` ใช้ `@Global()` และ import ใน `AppModule` ครั้งเดียว เพื่อให้ Todo และ Notes inject `DatabaseService` และใช้ PostgreSQL Pool ร่วมกัน
-- `src/notes/` แยก Controller และ Service สำหรับสร้างและอ่านโน้ต
+- `src/todos/todos.service.ts` inject `Repository<Todo>` เพื่ออ่านและเขียนตาราง `todos`
+- `src/config/app.config.ts` เลือกไฟล์ตาม `APP_ENV` และส่งค่า PostgreSQL ให้ `TypeOrmModule.forRootAsync()`
+- `src/notes/` มี `Note` entity, `NotesModule` ที่ลงทะเบียน `TypeOrmModule.forFeature([Note])` และ `NotesService` ที่ inject `Repository<Note>`
 - `compose.yaml` กำหนด PostgreSQL container, พอร์ต และ volume
 - `postgres/init.sql` กำหนดโครงสร้างตาราง
 
@@ -141,7 +143,7 @@ mise exec -- npm run test:e2e
 mise exec -- npm run test:cov
 ```
 
-เทสต์ทั้งหมดอยู่ใน `test/` ไฟล์ `*.spec.ts` เป็น unit test เช่น `test/notes.service.spec.ts` ซึ่งใช้ Pool จำลอง ส่วนไฟล์ `*.e2e-spec.ts` เป็น E2E test ที่ยิง HTTP ผ่าน NestJS
+เทสต์ทั้งหมดอยู่ใน `test/` ไฟล์ `*.spec.ts` เป็น unit test เช่น `test/notes.service.spec.ts` ซึ่งใช้ Repository จำลอง ส่วนไฟล์ `*.e2e-spec.ts` เป็น E2E test ที่ยิง HTTP ผ่าน NestJS
 
 ถ้าต้องการทดสอบ Notes กับ PostgreSQL จริง ให้เปิดฐานข้อมูล local ที่มีตาราง `notes` แล้วรัน
 

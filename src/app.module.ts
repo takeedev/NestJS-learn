@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { envFilePath } from './config/app.config.js';
-import { DatabaseModule } from './database/database.module.js';
+import { databaseConfig, envFilePath } from './config/app.config.js';
 import { NotesModule } from './notes/notes.module.js';
 import { TodosModule } from './todos/todos.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath }),
-    DatabaseModule,
+    TypeOrmModule.forRootAsync(databaseConfig.asProvider()),
     TodosModule,
     NotesModule,
   ],

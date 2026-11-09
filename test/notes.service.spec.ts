@@ -1,36 +1,43 @@
 import { Test } from '@nestjs/testing';
-import { DatabaseService } from '../src/database/database.module.js';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Note } from '../src/notes/note.entity.js';
 import { NotesService } from '../src/notes/notes.service.js';
 
 describe('NotesService', () => {
-  const query = vi.fn();
+  const repository = {
+    find: vi.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+  };
   let service: NotesService;
 
   beforeEach(async () => {
-    query.mockReset();
+    vi.resetAllMocks();
     const module = await Test.createTestingModule({
       providers: [
         NotesService,
-        { provide: DatabaseService, useValue: { pool: { query } } },
+        { provide: getRepositoryToken(Note), useValue: repository },
       ],
     }).compile();
     service = module.get(NotesService);
   });
 
-  it('returns the notes read from PostgreSQL', async () => {
+  it('reads notes in ID order', async () => {
     const notes = [{ id: 1, content: 'Learn NestJS' }];
-    query.mockResolvedValue({ rows: notes });
+    repository.find.mockResolvedValue(notes);
 
     await expect(service.findAll()).resolves.toEqual(notes);
+    expect(repository.find).toHaveBeenCalledWith({ order: { id: 'ASC' } });
   });
 
-  it('passes the note content as a SQL parameter and returns the saved row', async () => {
-    const note = { id: 1, content: "Today's note" };
-    query.mockResolvedValue({ rows: [note] });
+  it('creates a Note entity and returns the saved result', async () => {
+    const note = { content: "Today's note" };
+    const saved = { id: 1, ...note };
+    repository.create.mockReturnValue(note);
+    repository.save.mockResolvedValue(saved);
 
-    await expect(service.create(note.content)).resolves.toEqual(note);
-    expect(query).toHaveBeenCalledWith(expect.stringContaining('VALUES ($1)'), [
-      note.content,
-    ]);
+    await expect(service.create(note.content)).resolves.toEqual(saved);
+    expect(repository.create).toHaveBeenCalledWith(note);
+    expect(repository.save).toHaveBeenCalledWith(note);
   });
 });
