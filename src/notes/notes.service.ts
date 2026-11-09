@@ -1,21 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Note } from './note.entity.js';
+import type { Note } from './note.entity.js';
+import { NotesRepository } from './notes.repository.js';
 
 @Injectable()
 export class NotesService {
-  constructor(
-    @InjectRepository(Note)
-    private readonly notesRepository: Repository<Note>,
-  ) {}
+  constructor(private readonly notesRepository: NotesRepository) {}
 
   findAll(): Promise<Note[]> {
-    return this.notesRepository.find({ order: { id: 'ASC' } });
+    return this.notesRepository.findAll();
   }
 
   create(content: string): Promise<Note> {
-    const note = this.notesRepository.create({ content });
-    return this.notesRepository.save(note);
+    return this.notesRepository.create(content);
   }
 }

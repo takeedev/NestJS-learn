@@ -129,7 +129,7 @@ docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U todo -d todos < postg
 - `src/todos/todos.controller.ts` รับ HTTP request และตรวจข้อมูลก่อนส่งให้ Service
 - `src/todos/todos.service.ts` inject `Repository<Todo>` เพื่ออ่านและเขียนตาราง `todos`
 - `src/config/app.config.ts` เลือกไฟล์ตาม `APP_ENV` และส่งค่า PostgreSQL ให้ `TypeOrmModule.forRootAsync()`
-- `src/notes/` มี `Note` entity, `NotesModule` ที่ลงทะเบียน `TypeOrmModule.forFeature([Note])` และ `NotesService` ที่ inject `Repository<Note>`
+- `src/notes/` มี `Note` entity, `NotesModule` ที่ลงทะเบียน `TypeOrmModule.forFeature([Note])` และ `NotesRepository` ที่ inject `Repository<Note>` เพื่ออ่านและบันทึกข้อมูล ส่วน `NotesService` เรียกผ่าน `NotesRepository`
 - `compose.yaml` กำหนด PostgreSQL container, พอร์ต และ volume
 - `postgres/init.sql` กำหนดโครงสร้างตาราง
 
@@ -143,7 +143,7 @@ mise exec -- npm run test:e2e
 mise exec -- npm run test:cov
 ```
 
-เทสต์ทั้งหมดอยู่ใน `test/` ไฟล์ `*.spec.ts` เป็น unit test เช่น `test/notes.service.spec.ts` ซึ่งใช้ Repository จำลอง ส่วนไฟล์ `*.e2e-spec.ts` เป็น E2E test ที่ยิง HTTP ผ่าน NestJS
+เทสต์ทั้งหมดอยู่ใน `test/` ไฟล์ `*.spec.ts` เป็น unit test เช่น `test/notes.repository.spec.ts` ซึ่งใช้ Repository จำลอง ส่วนไฟล์ `*.e2e-spec.ts` เป็น E2E test ที่ยิง HTTP ผ่าน NestJS
 
 ถ้าต้องการทดสอบ Notes กับ PostgreSQL จริง ให้เปิดฐานข้อมูล local ที่มีตาราง `notes` แล้วรัน
 
