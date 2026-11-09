@@ -28,3 +28,7 @@ Provider คือสิ่งที่เราลงทะเบียนใ�
 - `xxxService` ต้องใช้ `xxxRepository` เพื่ออ่านและบันทึกข้อมูล
 
 เมื่อเราลงทะเบียน `xxxService` และ `xxxRepository` ใน `providers` ของ `xxxModule` แล้วระบุสิ่งที่ต้องใช้ใน constructor แต่ละคลาส NestJS จะจัดการเชื่อมทั้งสามส่วนให้ตอนเริ่มแอป
+
+# [Modules](https://docs.nestjs.com/modules)
+Modules คือการกำหนดขอบเขตที่ NestJS ได้ทำการจัดระเบียบและโครงสร้างของ application โดยหลักๆ จะมี providers, controller, import, exports หมายความว่าเราจะไม่สามารถนำ provinders อีก modules มาใช้กับอีก modules ได้ 
+แต่อย่างไรก็ตาม ยังมีสิ่งที่ต้องการใช้กับทุกๆ modules ได้ เช่น Helpers, Database ซี่งสามารถทำเป็น Global Modules เพื่อให้หลายๆ modules ใช้งานได้ด้วย แต่ไม่แนะนำให้ใช้ Global ทั้งหมด
