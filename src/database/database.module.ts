@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule, type ConfigType } from '@nestjs/config';
 import { Pool } from 'pg';
-import { databaseConfig } from '../config/database.config.js';
+import { databaseConfig } from '../config/app.config.js';
 
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {

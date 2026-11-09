@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { appEnvironment } from './config/app-environment.js';
+import { appEnvironment } from './config/app.config.js';
 
 export function setupSwagger(app: INestApplication): void {
   const swaggerEnabled =

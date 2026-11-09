@@ -125,8 +125,7 @@ docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U todo -d todos < postg
 - `src/main.ts` สตาร์ต NestJS ส่วน `src/app.module.ts` ลงทะเบียน `TodosModule` และ `NotesModule`
 - `src/todos/todos.controller.ts` รับ HTTP request และตรวจข้อมูลก่อนส่งให้ Service
 - `src/todos/todos.service.ts` ใช้ SQL แบบมีพารามิเตอร์เพื่ออ่านและเขียน PostgreSQL
-- `src/config/app-environment.ts` เลือกไฟล์ตาม `APP_ENV`
-- `src/config/database.config.ts` จัดกลุ่มค่าเชื่อมต่อฐานข้อมูลและส่งให้ `DatabaseService` ผ่าน dependency injection
+- `src/config/app.config.ts` เลือกไฟล์ตาม `APP_ENV` และจัดกลุ่มค่า PostgreSQL ให้ `DatabaseService`
 - `src/database/database.module.ts` ใช้ `@Global()` และ import ใน `AppModule` ครั้งเดียว เพื่อให้ Todo และ Notes inject `DatabaseService` และใช้ PostgreSQL Pool ร่วมกัน
 - `src/notes/` แยก Controller และ Service สำหรับสร้างและอ่านโน้ต
 - `compose.yaml` กำหนด PostgreSQL container, พอร์ต และ volume
@@ -142,4 +141,15 @@ mise exec -- npm run test:e2e
 mise exec -- npm run test:cov
 ```
 
-Unit test และ E2E test ที่อยู่ใน repo ทดสอบ endpoint หลัก `GET /` ส่วนการลอง Todo API ผ่าน HTTP ต้องเปิด PostgreSQL ก่อน รายละเอียดการตั้ง NestJS Observe สำหรับ telemetry อยู่ใน `AGENTS.md`
+เทสต์ทั้งหมดอยู่ใน `test/` ไฟล์ `*.spec.ts` เป็น unit test เช่น `test/notes.service.spec.ts` ซึ่งใช้ Pool จำลอง ส่วนไฟล์ `*.e2e-spec.ts` เป็น E2E test ที่ยิง HTTP ผ่าน NestJS
+
+ถ้าต้องการทดสอบ Notes กับ PostgreSQL จริง ให้เปิดฐานข้อมูล local ที่มีตาราง `notes` แล้วรัน
+
+```bash
+docker compose up -d --wait postgres
+APP_ENV=local RUN_DB_E2E=1 mise exec -- npm run test:e2e
+```
+
+ชุด Notes E2E สร้างโน้ตตัวอย่าง อ่านกลับผ่าน HTTP และลบแถวที่สร้างหลังทดสอบ
+
+รายละเอียดการตั้ง NestJS Observe สำหรับ telemetry อยู่ใน `AGENTS.md`

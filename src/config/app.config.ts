@@ -1,6 +1,18 @@
 import { registerAs } from '@nestjs/config';
 import type { PoolConfig } from 'pg';
-import { appEnvironment } from './app-environment.js';
+
+const supportedEnvironments = ['local', 'sit', 'uat', 'prod'];
+
+export const appEnvironment = process.env.APP_ENV ?? 'local';
+
+if (!supportedEnvironments.includes(appEnvironment)) {
+  throw new Error('APP_ENV must be local, sit, uat, or prod');
+}
+
+export const envFilePath =
+  appEnvironment === 'local'
+    ? ['.env.local', '.env']
+    : `.env.${appEnvironment}`;
 
 export const databaseConfig = registerAs('database', (): PoolConfig => {
   const isLocal = appEnvironment === 'local';
