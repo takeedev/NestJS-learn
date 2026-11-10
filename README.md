@@ -32,3 +32,26 @@ Provider คือสิ่งที่เราลงทะเบียนใ�
 # [Modules](https://docs.nestjs.com/modules)
 Modules คือการกำหนดขอบเขตที่ NestJS ได้ทำการจัดระเบียบและโครงสร้างของ application โดยหลักๆ จะมี providers, controller, import, exports หมายความว่าเราจะไม่สามารถนำ provinders อีก modules มาใช้กับอีก modules ได้ 
 แต่อย่างไรก็ตาม ยังมีสิ่งที่ต้องการใช้กับทุกๆ modules ได้ เช่น Helpers, Database ซี่งสามารถทำเป็น Global Modules เพื่อให้หลายๆ modules ใช้งานได้ด้วย แต่ไม่แนะนำให้ใช้ Global ทั้งหมด
+
+# [Middleware](https://docs.nestjs.com/middleware)
+คือสิ่งที่ทำงานร่วมกับ http request ก่อนถึง method controller และสามารถเข้าถึง object request หรือตอบ response ได้เอง ซึ่งของ nestJS เองสามารถเทียบเท่ากับ middleware ของ [Express](https://expressjs.com/en/guide/using-middleware/)
+
+```mermaid
+flowchart TD
+    Client["Client เช่น Swagger หรือ Browser"]
+    Express["Express รับ HTTP request"]
+    Middleware{"Middleware อ่าน req<br/>แล้วเลือกว่าจะทำอะไร"}
+    Controller["xxxController.findAll()"]
+    Response["Express ส่ง HTTP response"]
+
+    Client -->|"HTTP request: GET /notes"| Express
+    Express --> Middleware
+    Middleware -->|"เรียก next()"| Controller
+    Controller -->|"คืนรายการ"| Response
+    Middleware -->|"ตอบเอง เช่น 503 Maintenance"| Response
+    Response -->|"HTTP response: status + JSON"| Client
+```
+HTTP Adapter คือชั้นที่เชื่อม NestJS กับตัวรับส่ง HTTP โดย ExpressAdapter ใช้ Express, FastifyAdapter ใช้ Fastify และ NodeAdapter ใช้ node:http ที่มากับ Node.js โดยตรง ทั้งสามแบบยังรันบน Node.js เหมือนกัน
+ดังนั้น โดยค่าเริ่มต้นจะใช้ ExpressAdapter เพราะเป็นตัวที่ทำงานได้รวดเร็วที่สุดในบรรดาทั้ง 3 ตัว โดยตรวจได้จาก [Performance](https://docs.nestjs.com/http/performance#performance)
+
+ผลกับ Middleware คือ req และ res ที่ได้รับอาจต่างกันตาม adapter ที่เลือก NodeAdapter รองรับรูปแบบ use(req, res, next) และเมธอดสไตล์ Express เช่น res.status() และ res.json() ส่วน Middleware บน Fastify จะได้รับ req และ res ดิบของ Node.js จึงต้องเช็กก่อนใช้โค้ดที่อาศัยเมธอดของ Express
