@@ -1,10 +1,9 @@
 # [NestJS](https://docs.nestjs.com/first-steps)
 
 เป็น framework สำหรับสร้าง backend บน nodeJS นิยมเขียนด้วย TypeScript ใช้ Express เป็นชั้นรับส่ง HTTP เป็นค่าเริ่มต้นและยังเลือกใช้ Fastify ได้ สาเหตุที่นิยมเขียน TypeScript เพราะว่า NestJS ถูกสร้างโดยภาษา TypeScipt เป็นหลัก
-
-โดย NestJS ได้ผสมแนวคิดจาก OOP(Object Oriented Programming) FP(Function Programming) FRP(Function Reactive Programming) ดังนั้นการใช้แนวคิดการออกแบบ SOLID จึงเป็นเรื่องที่ดี และโครงสร้างของ NestJs ได้แรงบันไดจาก Angular
-
 กรณีอยากเขียนเป็น JavaScript สามารถเขียนได้ แต่ต้องใช้ [Babel](https://babeljs.io) เข้ามาช่วยในการ compile เนื่องจากโครงสร้างหลักของ NestJS ส่วนใหญ่ใช้ TypeScript
+
+โดย NestJS ได้ผสมแนวคิดจาก OOP(Object Oriented Programming) FP(Function Programming) FRP(Function Reactive Programming) ดังนั้นการใช้แนวคิดการออกแบบ SOLID จึงเป็นเรื่องที่ดี และโครงสร้างของ NestJs ได้แรงบันดาลจาก Angular ถ้าเคยเขียน Spring Framework จะสามารถปรับตัวได้ง่าย เพราะมีอย่าง TypeORM ที่เป็นเหมือ JDBC/JPA
 
 # [Controller](https://docs.nestjs.com/controllers)
 มีหน้าที่รับและจัดการคำขอ (request) จาก client แล้วส่งผลตอบกลับ (response) โดยระบบ Routing จะจับคู่ HTTP method และ path ของคำขอกับเมธอดใน Controller ที่รับผิดชอบ Controller หนึ่งตัวมีได้หลาย route และแต่ละ route ทำงานต่างกันได้
